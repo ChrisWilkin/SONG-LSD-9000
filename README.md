@@ -14,3 +14,6 @@ Team Members:
 - conda install -c huggingface transformers
 - conda install -c anaconda nltk
 - conda install pandas
+
+## Data set (potentially)
+- https://www.kaggle.com/edenbd/150k-lyrics-labeled-with-spotify-valence/version/1
