@@ -8,3 +8,9 @@ Team Members:
 - Robert (Robert) Fletcher, 
 - Sachin (Satchel) Beepath, 
 - Berkem (Berky, but only to his friends) Billuroglu 
+
+## Important Installs
+- conda create --name ENV_NAME pytorch
+- conda install -c huggingface transformers
+- conda install -c anaconda nltk
+- conda install pandas
