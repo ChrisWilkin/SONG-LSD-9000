@@ -80,10 +80,11 @@ class TransformerBlock(nn.Module):
 
 
 class Encoder(nn.Module):
-    def __init(self, src_vocab_size, embed_size, num_layers, heads, device, forward_expansion, dropout, max_length):
+    def __init__(self, src_vocab_size, embed_size, num_layers, heads, device, forward_expansion, dropout, max_length, pad_idx):
         #max_length related to position embedding - tell it how long the longest sentence length is - allows larger onces to be ignored
         super(Encoder, self).__init__()
         self.embed_size = embed_size
+        self.src_pad_idx = pad_idx
         self.device = device
         self.word_embedding = nn.Embedding(src_vocab_size, embed_size) # created embeddings for a vocabulary size x, with each word being assigned a vector size y
         self.positional_embedding = nn.Embedding(max_length, embed_size)
@@ -96,8 +97,17 @@ class Encoder(nn.Module):
             ]
         )
         self.dropout = nn.Dropout(dropout)
+        self.fc_out = nn.Linear(embed_size, 1)
 
-    def forward(self, x, mask):
+    def make_src_mask(self, src):
+        src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
+        # (N, 1, 1, src_len)
+        return src_mask.to(self.device)
+
+    def forward(self, x, mask=None):
+        if mask is None:
+            mask = self.make_src_mask(x)
+
         N, seq_length = x.shape
         positions = torch.arange(0, seq_length).expand(N, seq_length).to(self.device)
 
@@ -106,6 +116,9 @@ class Encoder(nn.Module):
         for layer in self.layers:
             out = layer(out, out, out, mask) # in the encode, the value key and query are all the same!
         
+        # Softmax and Linear Stage for positivity score
+        out = torch.softmax(self.fc_out(out))
+
         return out
 
 
