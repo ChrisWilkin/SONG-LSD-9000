@@ -105,8 +105,8 @@ class Encoder(nn.Module):
         return src_mask.to(self.device)
 
     def forward(self, x, mask=None):
-        if mask is None:
-            mask = self.make_src_mask(x)
+        #if mask is None:
+         #   mask = self.make_src_mask(x)
 
         N, seq_length = x.shape
         positions = torch.arange(0, seq_length).expand(N, seq_length).to(self.device)
@@ -117,7 +117,7 @@ class Encoder(nn.Module):
             out = layer(out, out, out, mask) # in the encode, the value key and query are all the same!
         
         # Softmax and Linear Stage for positivity score
-        out = torch.softmax(self.fc_out(out))
+        out = torch.sigmoid(self.fc_out(out))
 
         return out
 

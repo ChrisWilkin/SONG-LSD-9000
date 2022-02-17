@@ -41,6 +41,10 @@ def cutoff(arr):
                 '<PAD>', '<PAD>', '<PAD>', '<PAD>', '<PAD>', '<PAD>', '<PAD>', '<PAD>', '<PAD>', 
                 '<PAD>', '<PAD>', '<PAD>', '<EOS>']
 
+def sent_2_vec(sentence, vocab):
+    return [vocab[word] for word in sentence]
+
+
 
 file = pd.read_csv(os.path.join(THIS_FOLDER, 'Data\\data_tokens_stems.csv'))
 
@@ -50,7 +54,9 @@ df = df[['Stems', 'Positivity']]
 df['Cutoffs'] = df['Stems'].apply(cutoff)
 
 VOCAB = set(np.concatenate(df['Cutoffs'].to_numpy()))
-VOCABULARY = list(VOCAB)
+VOCAB_list = list(VOCAB)
+VOCABULARY = {keys:value for (value, keys) in enumerate(VOCAB_list)}
+
 
 VOCAB_SIZE = len(VOCAB)
 HEADS = 8
@@ -60,9 +66,8 @@ MAX_LENGTH = 22
 DEVICE = 'cpu' if torch.cuda.is_available() else 'cpu'
 EXPANSION = 4
 DROP = 0.1
-PAD = VOCABULARY.index('<PAD>')
-print(PAD)
-print(VOCABULARY[:10])
+PAD = VOCABULARY['<PAD>']
+
 
 LR = 3e-4
 EPOCHS = 1
@@ -77,7 +82,9 @@ model = trans.Encoder(VOCAB_SIZE, EMBED_SIZE, NUM_LAYERS, HEADS, DEVICE, EXPANSI
 
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
-sentence = ['<SOS>', 'i', 'am', 'very', 'happy', 'and', 'excited', 'to', 'be', 'alive', '!', 'i', 'am', 'very', 'lucky', 'to', 'be', 'happy', 'happy', 'happy', 'happy', '<EOS>']
+sentence = ['<SOS>', 'i', 'am', 'super', 'mad', 'and', 'mad', 'to', 'be', 'mad', '!', 'i', 'am', 'super', 'mad', 'to', 'be', 'mad', 'mad', 'mad', 'mad', '<EOS>']
+enc_sent = sent_2_vec(sentence, VOCABULARY)
+print(enc_sent)
 
 for epoch in range(EPOCHS):
     print(f'Epoch {epoch + 1} / {EPOCHS}')
@@ -86,9 +93,7 @@ for epoch in range(EPOCHS):
     #for idx, batch in enumerate(dloader):
     for idx in range(200):
         optimizer.zero_grad()
-        inp_data, label = sentence, 1.
-        inp_data
-        label
+        inp_data, label = torch.tensor([enc_sent, enc_sent, enc_sent, enc_sent]),torch.tensor([0., 0., 0., 0.])
 
         output = model(inp_data)
         loss = criterion(output, label)
@@ -97,6 +102,7 @@ for epoch in range(EPOCHS):
 
         if (idx + 1) % 10 == 0:
             print(loss)
+            print(output.shape)
 
         
 
