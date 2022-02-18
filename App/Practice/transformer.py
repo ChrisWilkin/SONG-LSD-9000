@@ -98,6 +98,7 @@ class Encoder(nn.Module):
         )
         self.dropout = nn.Dropout(dropout)
         self.fc_out = nn.Linear(embed_size, 1)
+        self.fc_out2 = nn.Linear(22, 1)
 
     def make_src_mask(self, src):
         src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
@@ -117,9 +118,9 @@ class Encoder(nn.Module):
             out = layer(out, out, out, mask) # in the encode, the value key and query are all the same!
         
         # Softmax and Linear Stage for positivity score
-        out = torch.sigmoid(self.fc_out(out))
+        out = torch.sigmoid(self.fc_out2(self.fc_out(out).squeeze()))
 
-        return out
+        return torch.mean(out, dim=1)
 
 
 class DecoderBlock(nn.Module):
