@@ -118,7 +118,7 @@ class Encoder(nn.Module):
             out = layer(out, out, out, mask) # in the encode, the value key and query are all the same!
         
         # Softmax and Linear Stage for positivity score
-        out = torch.sigmoid(self.fc_out2(self.fc_out(out).squeeze()))
+        out = torch.softmax(self.fc_out2(self.fc_out(out).squeeze()), dim=1)
 
         return torch.mean(out, dim=1)
 

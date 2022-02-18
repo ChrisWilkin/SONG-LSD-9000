@@ -1,3 +1,4 @@
+from tabnanny import verbose
 import torch
 import torch.nn as nn
 import numpy as np
@@ -71,26 +72,27 @@ HEADS = 8
 EMBED_SIZE = 256
 NUM_LAYERS = 3
 MAX_LENGTH = 22
-DEVICE = 'cpu' if torch.cuda.is_available() else 'cpu'
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 EXPANSION = 4
 DROP = 0.1
 PAD = VOCABULARY['<PAD>']
 
-
-LR = 1e-3
-EPOCHS = 1
-BATCH = 64
+LR = 3e-3
+EPOCHS = 5
+BATCH = 128
 clear()
 print('Creating Dataset and Dataloader...')
 dset = CustomDataset(df['Cutoffs'].to_list(), torch.tensor(df['Positivity'].values), sent_2_vec, VOCABULARY)
 dloader = DataLoader(dset, batch_size=BATCH, shuffle=True)
 
-criterion = nn.MSELoss()
+criterion = nn.BCELoss()
 
 model = trans.Encoder(VOCAB_SIZE, EMBED_SIZE, NUM_LAYERS, HEADS, DEVICE, EXPANSION, DROP, MAX_LENGTH, PAD)
 model.double()
+model.to(DEVICE)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
+lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=512, gamma=0.2, verbose=True)
 
 sentence = ['<SOS>', 'i', 'am', 'super', 'mad', 'and', 'mad', 'to', 'be', 'mad', '!', 'i', 'am', 'super', 'mad', 'to', 'be', 'mad', 'mad', 'mad', 'mad', '<EOS>']
 enc_sent = sent_2_vec(sentence, VOCABULARY)
@@ -99,6 +101,7 @@ print(enc_sent)
 losses = []
 clear()
 print('Training...')
+print(f'Using {DEVICE}')
 for epoch in range(EPOCHS):
     print(f'Epoch {epoch + 1} / {EPOCHS}')
     model.train()
@@ -114,13 +117,16 @@ for epoch in range(EPOCHS):
         optimizer.step()
 
         losses.append(loss.item())
+        lr_scheduler.step()
 
         if (idx + 1) % 200 == 0:
             print(f'Batch {idx + 1} / {len(dloader)}')
-            print(f'Loss: {np.average(losses):.5f}')
+            print(f'Loss: {np.average(losses[-199:]):.5f}')
             print(f'Prediction: {output[0]}; Actual: {label[0]}')
         
-            losses = []
+
+plt.plot(losses)
+plt.show()
         
 
 
